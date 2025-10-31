@@ -6,8 +6,8 @@
 # Secrets (HANYA jika tidak terenkripsi)
 # Jika Anda pindah ke age-nix, Anda akan MENGHAPUS baris ini
 # dan menggantinya dengan *.txt (file aslinya)
-/secrets/
-
+# /secrets/
+*.dec
 # Editor/OS cruft
 .DS_Store
 *.swp
