@@ -48,7 +48,7 @@
       
       # Automatically add keys to ssh-agent
       AddKeysToAgent yes
-      UseKeychain yes # macOS specific, but harmless on Linux
+      # UseKeychain yes # macOS specific, but harmless on Linux
       
       # --- GitHub Account Aliases ---
 
