@@ -22,6 +22,7 @@
 
     # utility
     # nixpkgs-fmt stylua
-    xclip #for x11, use wl-clipboard for wayland 
+    xclip #for x11, use wl-clipboard for wayland
+    obsidian
   ];
 }

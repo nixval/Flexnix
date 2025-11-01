@@ -29,9 +29,9 @@ lib.flatten [
   (lib.optional (get "enableCachix") ../home/modules/services/cachix.nix)
   
   # desktop
-  (lib.optional (get "enableStylix") ../home/modules/desktop/stylix.nix)
-  (lib.optional (get "enableKitty") ../home/modules/desktop/kitty.nix)
-  (lib.optional (get "enableCommonApps") ../home/modules/desktop/common-apps.nix)
+  (lib.optional (get "enableStylix") ../home/modules/desktop/stylix/default.nix)
+  (lib.optional (get "enableKitty") ../home/modules/desktop/kitty/default.nix)
+  (lib.optional (get "enableCommonApps") ../home/modules/desktop/common-apps/default.nix)
 
   # --- NEW DE/WM MODULES ---
   (lib.optional (get "enableHyprland") ../home/modules/desktop/hyprland/hyprland.nix)

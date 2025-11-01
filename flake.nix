@@ -22,34 +22,31 @@
   };
 
   outputs = inputs @ { flake-parts, ... }:
-    # --- LET BLOCK (DEFINISI UTAMA) ---
-    # Ditempatkan di sini, di luar 'mkFlake'
     let
-      # 1. Load the cloner-friendly "assembly list"
       matrixConfig = import ./matrix.nix;
       lib = inputs.nixpkgs.lib;
-
-      # 2. Load the "Cooks" (the individual builders)
+      allHosts = lib.mapAttrs' (
+        fileName: fileType:
+          lib.nameValuePair (lib.removeSuffix ".nix" fileName) (import ./hosts/${fileName})
+      ) (lib.filterAttrs (n: t: t == "regular" && lib.hasSuffix ".nix" n) (builtins.readDir ./hosts));
+      
+      # Build the unique list of systems (e.g., [ "x86_64-linux" ])
+      allSystems = lib.unique (lib.mapAttrsToList (name: config: config.system) allHosts);
       homeBuilder = import ./lib/mkHome.nix inputs;
       nixosBuilder = import ./lib/mkNixOS.nix inputs;
 
-      # 3. Load the "Factory Managers" (the matrix engines)
       homeMatrixBuilder = import ./lib/mkHomeMatrix.nix {
         inherit inputs lib;
-        homeBuilder = homeBuilder; # Pass the HM cook
+        homeBuilder = homeBuilder; 
       };
       nixosMatrixBuilder = import ./lib/mkNixOSMatrix.nix {
         inherit inputs lib;
-        nixosBuilder = nixosBuilder; # Pass the NixOS cook
+        nixosBuilder = nixosBuilder;
       };
     in
-    # --- PANGGILAN FLAKE-PARTS ---
     flake-parts.lib.mkFlake { inherit inputs; } {
-      # Atribut-atribut ini sekarang menggunakan variabel dari 'let' di atas
-      
-      systems = import ./systems.nix;
-
-      # 1. perSystem BLOCK (Tools)
+      # systems = import ./systems.nix;
+      systems = allSystems;
       perSystem = { system, pkgs, inputs, ... }: {
         formatter = pkgs.nixfmt;
         
@@ -63,15 +60,8 @@
         apps = import ./lib/apps.nix { inherit pkgs; };
       }; # End perSystem
 
-      # 2. flake BLOCK (Global Outputs)
       flake = {
-        # Global overlay (consumed by perSystem.pkgs)
-        # overlays.default = import ./overlays/default.nix { inherit inputs; };
-
-        # 4a. Build all Home Manager (non-NixOS) configurations
         homeConfigurations = homeMatrixBuilder matrixConfig;
-
-        # 4b. Build all NixOS System configurations
         nixosConfigurations = nixosMatrixBuilder matrixConfig;
       }; # End flake
     };
