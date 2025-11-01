@@ -1,23 +1,16 @@
 /*
  * File: lib/mkNixOS.nix
+ * (Updated to fix HM bug and add DE/WM toggles)
  *
  * Description:
- * This is the NixOS "system builder".
- * It takes a base system config (from ./nixos) and a
- * home-manager profile (from ./profiles) and glues them
- * together to build a complete, bootable NixOS system.
- *
- * It should NOT be edited by a cloner.
+ * This is the "NixOS Cook". It builds a complete NixOS system.
  */
 inputs @ { nixpkgs, home-manager, nur, ... }:
-# These args come from the matrix build engine
 { username, hostname, system, userConfig, systemConfig }:
 
 let
-  # --- Consistency Check ---
-  # This 'let' block MUST mirror lib/mkHome.nix
-  # to ensure pkgs, overlays, and specialArgs are
-  # consistent between NixOS and non-NixOS builds.
+  # --- Consistency Block ---
+  # (This is identical to lib/mkHome.nix)
   inherit (nixpkgs) lib;
   stable-overlay = final: prev: {
     stable = import inputs.nixpkgs-stable {
@@ -25,17 +18,15 @@ let
       config = prev.config;
     };
   };
-
-  # This 'pkgs' instance is for the *system*
+  globalOverlay = import ../overlays/default.nix { inherit inputs; };
   pkgs = import nixpkgs {
     inherit system;
-    overlays = [ stable-overlay ];
-    # Get unfree preference from the profile
+    overlays = [ stable-overlay globalOverlay ];
     config.allowUnfree = userConfig.allowUnfree or false;
   };
+  # --- End Consistency Block ---
 
-  # These args are passed to *Home Manager*
-  # This MUST match extraSpecialArgs in lib/mkHome.nix
+  # HM args (must match mkHome.nix)
   hmSpecialArgs = {
     inherit inputs username hostname system userConfig pkgs;
     nixgl = inputs.nixGL;
@@ -43,11 +34,9 @@ let
   };
 
 in
-# Use the official NixOS system builder
 lib.nixosSystem {
   inherit system;
   
-  # Pass 'inputs' to system modules (e.g., nixos/nixval-pc.nix)
   specialArgs = { inherit inputs; };
 
   modules = [
@@ -55,34 +44,31 @@ lib.nixosSystem {
     inputs.home-manager.nixosModules.home-manager
 
     # 2. Import the base system configuration
-    # (filesystems, hardware, etc. from ./nixos/nixval-pc.nix)
+    # (e.g., ./nixos/nixval-pc.nix)
     (import ../nixos/${systemConfig})
 
-    # 3. This is the "glue" module.
-    # It dynamically injects the user and their profile
-    # into the base system configuration.
+    # --- NEW: System-level DE/WM Toggles ---
+    # This toggle loads the NixOS *service* for Hyprland
+    (lib.optional userConfig.enableHyprland ../nixos/modules/desktop/hyprland/hyprland.nix)
+    # (lib.optional userConfig.enableGnome ../nixos/modules/gnome-sys.nix)
+
+    # 3. The "glue" module
     ({ ... }: {
-      # Set the system's hostname from the matrix
       networking.hostName = hostname;
 
-      # Create the user defined in the matrix
       users.users.${username} = {
         isNormalUser = true;
         description = "Main user";
-        # Add sudo (wheel) and networkmanager access
         extraGroups = [ "wheel" "networkmanager" ];
-        # You can set your default shell here if needed
-        # shell = pkgs.zsh;
       };
 
-      # Configure Home Manager *for that user*
       home-manager.users.${username} = {
-        # This is the magic: it imports the correct profile
-        # e.g., ./profiles/gaming.nix
-        imports = [ userConfig ];
-
-        # Pass the *exact same* args as the non-NixOS builder
-        # to ensure the profile behaves identically.
+        # --- CRITICAL BUG FIX ---
+        # Import the central HM "recipe book" (mkHomeModules.nix)
+        # This fixes the bug where HM modules were not loading.
+        imports = (import ./mkHomeModules.nix { inherit lib; inherit userConfig; });
+        
+        # Pass consistent pkgs and args
         inherit pkgs;
         extraSpecialArgs = hmSpecialArgs;
       };

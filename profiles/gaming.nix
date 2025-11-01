@@ -6,6 +6,8 @@
  */
 {
   allowUnfree = true;
+  # choose only one of this wayland compositor, no double!!
+  enableHyprland = false;
 
   # Toggles dari studi kasus
   enableSteam = false; # TODO: Buat modul home/modules/desktop/steam.nix
