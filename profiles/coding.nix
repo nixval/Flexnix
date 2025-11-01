@@ -10,6 +10,8 @@
   # User-specific details
   # username = "nixval";
   allowUnfree = true;  
+
+  # enableHyprland = false;
   # --- Module Toggles ---
   # These flags determine which modules are loaded from
   # 'home/modules/' for this user.

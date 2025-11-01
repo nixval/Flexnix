@@ -1,30 +1,48 @@
 /*
- * File: home/modules/desktop/hyprland-hm.nix
+ * File: nixos/modules/desktop/hyprland/hyprland.nix
  *
  * Description:
- * Manages Home Manager dotfiles and user packages for Hyprland.
- * This is loaded in *both* NixOS and non-NixOS modes.
+ * Manages NixOS system services for Hyprland.
+ * This is *only* loaded if 'type = "nixos"'.
  */
 { pkgs, ... }:
 
 {
-  # Add user packages needed for Hyprland
-  home.packages = with pkgs; [
-    waybar
-    wofi
-    hyprland-protocols
-    # ... etc
+  # 1. Install Hyprland and core dependencies to the system
+  # We install hyprland here, not in the HM module.
+  environment.systemPackages = with pkgs; [
+    hyprland
+    # Add xdg-desktop-portal-hyprland for screen sharing, etc.
+    xdg-desktop-portal-hyprland
   ];
 
-  # Link dotfiles
-  home.file.".config/hypr/hyprland.conf".text = ''
-    # Minimal Hyprland config stub
-    monitor=,preferred,auto,1
-  '';
+  # 2. Enable the Hyprland program
+  # This sets up wrapper scripts and necessary environment vars.
+  programs.hyprland.enable = true;
+  
+  # 3. Enable core Wayland/graphics support
+  # This is crucial for Hyprland to run.
+  hardware.opengl = {
+    enable = true;
+    driSupport = true;
+    driSupport32Bit = true;
+    # If you have NVIDIA, you'd add modesetting here
+    # nvidia.modesetting.enable = true;
+  };
 
-  home.file.".config/waybar/config".text = ''
-    // Waybar config stub
-  '';
+  # 4. Enable SDDM as the Display Manager (Login Screen)
+  services.xserver.displayManager.sddm = {
+    enable = true;
+    # Use the Wayland session for SDDM itself
+    wayland.enable = true;
+  };
 
-  # ... etc for wofi, foot, ...
+  # 5. Enable other necessary system services
+  services.dbus.enable = true;
+  services.pipewire = {
+    enable = true;
+    alsa.enable = true;
+    pulse.enable = true;
+    jack.enable = true;
+  };
 }
