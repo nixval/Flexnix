@@ -48,10 +48,20 @@ in
   lib.mapAttrs (
     outputName: cfg:
       let
-        # 3. Get all shared data
-        hostConfig = allHosts.${cfg.host} or (throw "...");
-        profileConfig = allProfiles.${cfg.profile} or (throw "...");
-        username = cfg.username or (throw "...");
+# 3. Get all shared data
+        hostConfig = allHosts.${cfg.host} or (throw "Host not found");
+        
+        # --- THE FIX ---
+        # Rename 'profileConfig' to 'userConfig' to match
+        # what the 'hm-builder.nix' and 'nixos-builder.nix' expect.
+        userConfig = allProfiles.${cfg.profile} or (throw "Profile not found");
+        # profileConfig = ... (OLD)
+        
+        username = cfg.username or (throw "Username not found");
+        # # 3. Get all shared data
+        # hostConfig = allHosts.${cfg.host} or (throw "...");
+        # profileConfig = allProfiles.${cfg.profile} or (throw "...");
+        # username = cfg.username or (throw "...");
         hostname = cfg.hostname or outputName;
         system = hostConfig.system;
       in
@@ -65,7 +75,7 @@ in
         nixosBuilder {
           # Args for lib/nixos-builder.nix
           inherit system userConfig username hostname;
-          systemConfig = cfg.systemConfig or (throw "...");
+          systemConfig = cfg.systemConfig or (throw "systemConfig not found");
         }
   ) filteredMatrix
 )

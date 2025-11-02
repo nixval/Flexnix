@@ -37,7 +37,7 @@
     initContent = ''
       # Custom helper
       mkcd () { mkdir -p "$@" && cd "$_"; }
-
+      export BAT_THEME="base16"
       # Initialize oh-my-posh using runtime $HOME path (avoid Nix evaluation recursion)
       if command -v oh-my-posh >/dev/null 2>&1; then
         eval "$(oh-my-posh init zsh --config $HOME/.config/oh-my-posh/theme.omp.json)"

@@ -5,6 +5,7 @@
   home.homeDirectory = "/home/${username}";
   home.stateVersion = "25.05"; # Pin state for compatibility
   home.packages = with pkgs; [
+    home-manager
     # cli
     git tree gdu bottom xclip
     
