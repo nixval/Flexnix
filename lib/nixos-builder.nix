@@ -31,6 +31,8 @@ lib.nixosSystem {
     inputs.home-manager.nixosModules.home-manager
     (import ../nixos/bases/${systemConfig})
     (lib.optional (userConfig.enableHyprland or false) ../nixos/modules/desktop/hyprland/hyprland.nix)
+    (lib.optional (userConfig.enableSteam or false) ../nixos/modules/desktop/steam.nix)
+
     ({ ... }: {
       networking.hostName = hostname;
 
@@ -41,7 +43,7 @@ lib.nixosSystem {
       };
 
       home-manager.users.${username} = {
-        imports = (import ./mkHomeModules.nix { inherit lib; inherit userConfig; });
+        imports = (import ./hm-modules.nix { inherit lib; inherit userConfig; });
         inherit pkgs;
         extraSpecialArgs = hmSpecialArgs;
       };

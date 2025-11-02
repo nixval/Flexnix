@@ -23,26 +23,41 @@
 
   outputs = inputs @ { flake-parts, ... }:
     let
-      matrixConfig = import ./matrix.nix;
+      # matrixConfig = import ./matrix.nix;
       lib = inputs.nixpkgs.lib;
+
       allHosts = lib.mapAttrs' (
         fileName: fileType:
           lib.nameValuePair (lib.removeSuffix ".nix" fileName) (import ./hosts/${fileName})
       ) (lib.filterAttrs (n: t: t == "regular" && lib.hasSuffix ".nix" n) (builtins.readDir ./hosts));
-      
-      # Build the unique list of systems (e.g., [ "x86_64-linux" ])
       allSystems = lib.unique (lib.mapAttrsToList (name: config: config.system) allHosts);
-      homeBuilder = import ./lib/mkHome.nix inputs;
-      nixosBuilder = import ./lib/mkNixOS.nix inputs;
 
-      homeMatrixBuilder = import ./lib/mkHomeMatrix.nix {
-        inherit inputs lib;
-        homeBuilder = homeBuilder; 
+      # 2. Load the "Cooks" (Builders)
+      homeBuilder = import ./lib/hm-builder.nix inputs;
+      nixosBuilder = import ./lib/nixos-builder.nix inputs;
+      
+      # 3. Load the *ONE* Matrix Engine
+      matrixBuilder = import ./lib/matrix-builder.nix {
+        inherit inputs lib homeBuilder nixosBuilder;
       };
-      nixosMatrixBuilder = import ./lib/mkNixOSMatrix.nix {
-        inherit inputs lib;
-        nixosBuilder = nixosBuilder;
-      };
+      # allHosts = lib.mapAttrs' (
+      #   fileName: fileType:
+      #     lib.nameValuePair (lib.removeSuffix ".nix" fileName) (import ./hosts/${fileName})
+      # ) (lib.filterAttrs (n: t: t == "regular" && lib.hasSuffix ".nix" n) (builtins.readDir ./hosts));
+      #
+      # # Build the unique list of systems (e.g., [ "x86_64-linux" ])
+      # allSystems = lib.unique (lib.mapAttrsToList (name: config: config.system) allHosts);
+      # homeBuilder = import ./lib/mkHome.nix inputs;
+      # nixosBuilder = import ./lib/mkNixOS.nix inputs;
+      #
+      # homeMatrixBuilder = import ./lib/mkHomeMatrix.nix {
+      #   inherit inputs lib;
+      #   homeBuilder = homeBuilder; 
+      # };
+      # nixosMatrixBuilder = import ./lib/mkNixOSMatrix.nix {
+      #   inherit inputs lib;
+      #   nixosBuilder = nixosBuilder;
+      # };
     in
     flake-parts.lib.mkFlake { inherit inputs; } {
       # systems = import ./systems.nix;
@@ -61,8 +76,10 @@
       }; # End perSystem
 
       flake = {
-        homeConfigurations = homeMatrixBuilder matrixConfig;
-        nixosConfigurations = nixosMatrixBuilder matrixConfig;
+        homeConfigurations = matrixBuilder "home";
+        nixosConfigurations = matrixBuilder "nixos";
+        # homeConfigurations = homeMatrixBuilder matrixConfig;
+        # nixosConfigurations = nixosMatrixBuilder matrixConfig;
       }; # End flake
     };
 }

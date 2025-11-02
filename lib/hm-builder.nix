@@ -40,5 +40,5 @@ home-manager.lib.homeManagerConfiguration {
   # This file no longer contains the logic.
   # It imports the central "recipe book" and passes
   # the required toggles (userConfig) to it.
-  modules = (import ./mkHomeModules.nix { inherit lib; inherit userConfig; });
+  modules = (import ./hm-modules.nix { inherit lib; inherit userConfig; });
 }
