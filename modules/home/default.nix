@@ -1,14 +1,28 @@
 {
   imports = [
     ./base.nix
-    ./cli/zsh.nix  
+    
+    # CLI
+    ./cli/zsh.nix
     ./cli/tmux
     ./cli/yazi
+    
+    # Editors
     ./editors/nvf
     ./editors/vscode
-    ./services/flatpak  
+    
+    # Services
+    ./services/flatpak
+    # ./services/secrets.nix
+    # ./services/cachix.nix
+    
+    # Desktop
     ./desktop/nixgl.nix
     ./desktop/stylix.nix
     ./desktop/common-apps.nix
+
+    # Development
+    ./languages  
+    ./development 
   ];
 }

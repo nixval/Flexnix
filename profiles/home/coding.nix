@@ -9,21 +9,34 @@ in
   };
 
   config = lib.mkIf cfg.enable {
-    # Inherit minimal settings
     flexnix.profiles.minimal.enable = true;
 
-    # --- Future Activations ---
+    # Core & Editors
     flexnix.modules.editors.nvf.enable = true;
+    flexnix.modules.editors.vscode.enable = true;
     flexnix.modules.cli.tmux.enable = true;
     flexnix.modules.cli.yazi.enable = true;
+
+    # Services
     flexnix.modules.services.flatpak.enable = true;
+    # flexnix.modules.services.secrets.enable = true;
+    # flexnix.modules.services.cachix.enable = true;
 
-    flexnix.modules.editors.vscode.enable = true;
-    # flexnix.modules.services.stylix.enable = true;
+    # Desktop
+    flexnix.modules.desktop.nixgl.enable = true;
+    flexnix.modules.desktop.stylix.enable = true;
+    flexnix.modules.desktop.commonApps.enable = true;
 
-    flexnix.modules.desktop.nixgl.enable = false;
-    flexnix.modules.desktop.stylix.enable = false;
-    flexnix.modules.desktop.commonApps.enable = false;
+    # --- Languages ---
+    flexnix.modules.languages.go.enable = true;
+    flexnix.modules.languages.rust.enable = true;
+    flexnix.modules.languages.python.enable = true;
+    flexnix.modules.languages.javascript.enable = true;
+    flexnix.modules.languages.utils.enable = true;
 
-  };
+    # --- Data ---
+    flexnix.modules.development.database.enable = true; 
+    
+    # Android (Optional, enable if needed)
+    # flexnix.modules.development.android.enable = true;  };
 }
