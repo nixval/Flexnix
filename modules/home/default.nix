@@ -2,6 +2,6 @@
   imports = [
     ./base.nix
     ./cli/zsh.nix  
-    #./editors/nvf.nix
+    ./editors/nvf
   ];
 }
