@@ -11,6 +11,7 @@
       ripgrep fd eza bat jq
       bottom gdu
       nerd-fonts.jetbrains-mono
+      neovim
     ];
 
     # --- Nix Configuration ---
