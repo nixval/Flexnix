@@ -16,9 +16,11 @@ in
     flexnix.modules.editors.nvf.enable = true;
     flexnix.modules.cli.tmux.enable = true;
     flexnix.modules.cli.yazi.enable = true;
-    flexnix.modules.cli.flatpak.enable = true;
+    flexnix.modules.services.flatpak.enable = true;
 
-    flexnix.modules.cli.vscode.enable = true;
-    flexnix.modules.cli.stylix.enable = true;
+    flexnix.modules.editors.vscode.enable = true;
+    # flexnix.modules.services.stylix.enable = true;
+
+    flexnix.modules.desktop.nixgl.enable = true;
   };
 }

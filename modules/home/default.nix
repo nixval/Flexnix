@@ -5,8 +5,8 @@
     ./cli/tmux
     ./cli/yazi
     ./editors/nvf
-    ./editors/vscode.nix
+    ./editors/vscode
     ./services/flatpak  
-
+    ./desktop/nixgl.nix
   ];
 }
