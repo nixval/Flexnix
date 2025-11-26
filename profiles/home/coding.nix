@@ -15,5 +15,7 @@ in
     # --- Future Activations ---
     flexnix.modules.editors.nvf.enable = true;
     flexnix.modules.cli.tmux.enable = true;
+    flexnix.modules.cli.yazi.enable = true;
+    flexnix.modules.cli.flatpak.enable = true;
   };
 }
