@@ -1,186 +1,95 @@
 {
-  description = "flexnix — portable home-manager first flake";
+  description = "FlexNix 2.0 — Portable & Modular Nix Configuration";
 
   inputs = {
+    # --- Official Sources ---
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
-    nixpkgs-stable.url = "github:NixOS/nixpkgs/nixos-25.05"; # Match stateVersion
+    nixpkgs-stable.url = "github:NixOS/nixpkgs/nixos-25.05";
 
     home-manager = {
       url = "github:nix-community/home-manager";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    flake-parts.url = "github:hercules-ci/flake-parts";
-    nvf.url = "github:NotAShelf/nvf";
-    agenix.url = "github:ryantm/age-nix";
-    nur = { url = "github:nix-community/NUR"; inputs.nixpkgs.follows = "nixpkgs"; };
-    nix-index-database.url = "github:nix-community/nix-index-database";
-    nixGL.url = "github:nix-community/nixGL";
-    nixos-hardware.url = "github:nixos/nixos-hardware";
-    impermanence.url = "github:nix-community/impermanence";
-    stylix.url = "github:danth/stylix";
+
+    # --- Community Tools ---
     nix-flatpak.url = "github:gmodena/nix-flatpak";
+    nixGL.url = "github:nix-community/nixGL";
+    nvf.url = "github:NotAShelf/nvf";
+    stylix.url = "github:danth/stylix";
+    agenix.url = "github:ryantm/age-nix";
+    nur.url = "github:nix-community/NUR";
   };
 
-  outputs = inputs @ { flake-parts, ... }:
+  outputs = { self, nixpkgs, home-manager, ... }@inputs:
     let
-      # matrixConfig = import ./matrix.nix;
-      lib = inputs.nixpkgs.lib;
+      systems = [ "x86_64-linux" "aarch64-linux" ];
+      forAllSystems = nixpkgs.lib.genAttrs systems;
 
-      allHosts = lib.mapAttrs' (
-        fileName: fileType:
-          lib.nameValuePair (lib.removeSuffix ".nix" fileName) (import ./hosts/${fileName})
-      ) (lib.filterAttrs (n: t: t == "regular" && lib.hasSuffix ".nix" n) (builtins.readDir ./hosts));
-      allSystems = lib.unique (lib.mapAttrsToList (name: config: config.system) allHosts);
-
-      # 2. Load the "Cooks" (Builders)
-      homeBuilder = import ./lib/hm-builder.nix inputs;
-      nixosBuilder = import ./lib/nixos-builder.nix inputs;
-      
-      # 3. Load the *ONE* Matrix Engine
-      matrixBuilder = import ./lib/matrix-builder.nix {
-        inherit inputs lib homeBuilder nixosBuilder;
+      # Overlay for hybrid stable/unstable packages
+      overlayStable = final: prev: {
+        stable = import inputs.nixpkgs-stable {
+          system = prev.system;
+          config.allowUnfree = true;
+        };
       };
-      # allHosts = lib.mapAttrs' (
-      #   fileName: fileType:
-      #     lib.nameValuePair (lib.removeSuffix ".nix" fileName) (import ./hosts/${fileName})
-      # ) (lib.filterAttrs (n: t: t == "regular" && lib.hasSuffix ".nix" n) (builtins.readDir ./hosts));
-      #
-      # # Build the unique list of systems (e.g., [ "x86_64-linux" ])
-      # allSystems = lib.unique (lib.mapAttrsToList (name: config: config.system) allHosts);
-      # homeBuilder = import ./lib/mkHome.nix inputs;
-      # nixosBuilder = import ./lib/mkNixOS.nix inputs;
-      #
-      # homeMatrixBuilder = import ./lib/mkHomeMatrix.nix {
-      #   inherit inputs lib;
-      #   homeBuilder = homeBuilder; 
-      # };
-      # nixosMatrixBuilder = import ./lib/mkNixOSMatrix.nix {
-      #   inherit inputs lib;
-      #   nixosBuilder = nixosBuilder;
-      # };
-    in
-    flake-parts.lib.mkFlake { inherit inputs; } {
-      # systems = import ./systems.nix;
-      systems = allSystems;
-      perSystem = { system, pkgs, inputs, ... }: {
-        formatter = pkgs.nixfmt;
+
+      globalOverlays = [ overlayStable ];
+
+    in {
+      formatter = forAllSystems (system: nixpkgs.legacyPackages.${system}.nixfmt);
+      
+      devShells = forAllSystems (system: {
+        default = nixpkgs.legacyPackages.${system}.mkShell {
+          buildInputs = with nixpkgs.legacyPackages.${system}; [ deadnix statix nil ];
+        };
+      });
+
+      # ====================================================
+      # HOME MANAGER CONFIGURATIONS
+      # ====================================================
+      homeConfigurations = {
         
-        devShells.default = pkgs.mkShell {
-          buildInputs = with pkgs; [ deadnix statix nil ];
+        # 1. Maintainer Setup (liyan@debian)
+        "nixval" = let
+          system = "x86_64-linux";
+          pkgs = import nixpkgs {
+            inherit system;
+            overlays = globalOverlays;
+            config.allowUnfree = true;
+          };
+        in home-manager.lib.homeManagerConfiguration {
+          inherit pkgs;
+          
+          # Inject Maintainer Identity
+          extraSpecialArgs = { 
+            inherit inputs;
+            username = "nixval";
+            hostname = "debian";
+          };
+          
+          modules = [ ./hosts/debian/home.nix ];
         };
 
-        checks.format = pkgs.runCommand "check-format" {} ''
-          ${pkgs.nixfmt}/bin/nixfmt --check ${./.} && touch $out
-        '';
-        apps = import ./lib/apps.nix { inherit pkgs; };
-      }; # End perSystem
+        # 2. Default Template (theName@theHost)
+        "standard" = let
+          system = "x86_64-linux";
+          pkgs = import nixpkgs {
+            inherit system;
+            overlays = globalOverlays;
+            config.allowUnfree = true;
+          };
+        in home-manager.lib.homeManagerConfiguration {
+          inherit pkgs;
 
-      flake = {
-        homeConfigurations = matrixBuilder "home";
-        nixosConfigurations = matrixBuilder "nixos";
-        # homeConfigurations = homeMatrixBuilder matrixConfig;
-        # nixosConfigurations = nixosMatrixBuilder matrixConfig;
-      }; # End flake
+          # Inject Template Placeholders
+          extraSpecialArgs = { 
+            inherit inputs;
+            username = "theName";
+            hostname = "theHost";
+          };
+          
+          modules = [ ./hosts/standard/home.nix ];
+        };
+      };
     };
 }
-
-
-# {
-#   description = "flexnix — portable home-manager first flake";
-#
-#   inputs = {
-#     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
-#     nixpkgs-stable.url = "github:NixOS/nixpkgs/nixos-25.05"; # Match stateVersion
-#
-#     home-manager = {
-#       url = "github:nix-community/home-manager";
-#       inputs.nixpkgs.follows = "nixpkgs";
-#     };
-#     flake-parts.url = "github:hercules-ci/flake-parts";
-#     nvf.url = "github:NotAShelf/nvf";
-#     agenix.url = "github:ryantm/age-nix";
-#     nur = { url = "github:nix-community/NUR"; inputs.nixpkgs.follows = "nixpkgs"; };
-#     nix-index-database.url = "github:nix-community/nix-index-database";
-#     nixGL.url = "github:nix-community/nixGL";
-#     nixos-hardware.url = "github:nixos/nixos-hardware";
-#     impermanence.url = "github:nix-community/impermanence";
-#     stylix.url = "github:danth/stylix";
-#     nix-flatpak.url = "github:gmodena/nix-flatpak";
-#   };
-#
-#   # 'cachix' removed from function arguments
-#   outputs = inputs @ { flake-parts, ... }:
-#     flake-parts.lib.mkFlake { inherit inputs; } {
-#
-#       # --- 'imports' and 'config' blocks removed ---
-#
-#       systems = import ./systems.nix;
-#
-#       # 1. perSystem BLOCK (Tools)
-#       perSystem = { system, pkgs, inputs, ... }: {
-#         formatter = pkgs.nixfmt;
-#
-#         devShells.default = pkgs.mkShell {
-#           buildInputs = with pkgs; [ deadnix statix nil ];
-#         };
-#
-#         checks.format = pkgs.runCommand "check-format" {} ''
-#           ${pkgs.nixfmt}/bin/nixfmt --check ${./.} && touch $out
-#         '';
-#         apps = import ./lib/apps.nix { inherit pkgs; };
-#       }; # End perSystem
-#
-#       # 2. flake BLOCK (Global Outputs)
-#       let
-#          # 1. Load the cloner-friendly "assembly list"
-#          matrixConfig = import ./matrix.nix;
-#          lib = inputs.nixpkgs.lib;
-#
-#          # 2. Load the "Cooks" (the individual builders)
-#          homeBuilder = import ./lib/mkHome.nix inputs;
-#          nixosBuilder = import ./lib/mkNixOS.nix inputs;
-#
-#          # 3. Load the "Factory Managers" (the matrix engines)
-#          homeMatrixBuilder = import ./lib/mkHomeMatrix.nix {
-#            inherit inputs lib;
-#            homeBuilder = homeBuilder; # Pass the HM cook
-#          };
-#          nixosMatrixBuilder = import ./lib/mkNixOSMatrix.nix {
-#            inherit inputs lib;
-#            nixosBuilder = nixosBuilder; # Pass the NixOS cook
-#          };
-#        in
-#
-#        # 2. flake BLOCK (Global Outputs)
-#        flake = {
-#          # Global overlay (consumed by perSystem.pkgs)
-#          # overlays.default = import ./overlays/default.nix { inherit inputs; };
-#
-#          # 4a. Build all Home Manager (non-NixOS) configurations
-#          homeConfigurations = homeMatrixBuilder matrixConfig;
-#
-#          # 4b. Build all NixOS System configurations
-#          nixosConfigurations = nixosMatrixBuilder matrixConfig;
-#        }; # End flake
-#      };
-#        # homeConfigurations =
-#        #    let
-#        #      # 1. Load the original home builder
-#        #      # This passes 'inputs' to lib/mkHome.nix
-#        #      homeBuilder = import ./lib/mkHome.nix inputs;
-#        #
-#        #      # 2. Load the matrix "engine"
-#        #      matrixBuilder = import ./lib/mkMatrix.nix {
-#        #        inherit inputs homeBuilder;
-#        #        lib = inputs.nixpkgs.lib;
-#        #      };
-#        #
-#        #      # 3. Load the cloner-friendly "assembly list"
-#        #      matrixConfig = import ./matrix.nix;
-#        #    in
-#        #    # 4. Build it!
-#        #    matrixBuilder matrixConfig;
-#       # }; # End flake
-#     # };
-# }
-#
