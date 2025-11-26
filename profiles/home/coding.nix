@@ -13,7 +13,7 @@ in
     flexnix.profiles.minimal.enable = true;
 
     # --- Future Activations ---
-    # flexnix.modules.editors.nvf.enable = true;
-    # flexnix.modules.cli.tmux.enable = true;
+    flexnix.modules.editors.nvf.enable = true;
+    flexnix.modules.cli.tmux.enable = true;
   };
 }
