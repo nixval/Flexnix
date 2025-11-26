@@ -21,6 +21,9 @@ in
     flexnix.modules.editors.vscode.enable = true;
     # flexnix.modules.services.stylix.enable = true;
 
-    flexnix.modules.desktop.nixgl.enable = true;
+    flexnix.modules.desktop.nixgl.enable = false;
+    flexnix.modules.desktop.stylix.enable = false;
+    flexnix.modules.desktop.commonApps.enable = false;
+
   };
 }
