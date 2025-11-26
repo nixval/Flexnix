@@ -5,6 +5,8 @@
     ./cli/tmux
     ./cli/yazi
     ./editors/nvf
-    ./services/flatpak    
+    ./editors/vscode.nix
+    ./services/flatpak  
+
   ];
 }

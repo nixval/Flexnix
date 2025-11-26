@@ -17,5 +17,8 @@ in
     flexnix.modules.cli.tmux.enable = true;
     flexnix.modules.cli.yazi.enable = true;
     flexnix.modules.cli.flatpak.enable = true;
+
+    flexnix.modules.cli.vscode.enable = true;
+    flexnix.modules.cli.stylix.enable = true;
   };
 }
