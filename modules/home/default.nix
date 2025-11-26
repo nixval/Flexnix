@@ -9,6 +9,6 @@
     ./services/flatpak  
     ./desktop/nixgl.nix
     ./desktop/stylix.nix
-    ./desktop/common-apps
+    ./desktop/common-apps.nix
   ];
 }
