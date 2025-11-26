@@ -1,7 +1,7 @@
 { config, lib, pkgs, ... }:
 
 let
-  cfg = config.flexnix.modules.development.data;
+  cfg = config.flexnix.modules.development.database;
 in
 {
   options.flexnix.modules.development.database = {

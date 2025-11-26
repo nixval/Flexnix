@@ -38,5 +38,6 @@ in
     flexnix.modules.development.database.enable = true; 
     
     # Android (Optional, enable if needed)
-    # flexnix.modules.development.android.enable = true;  };
+    # flexnix.modules.development.android.enable = true; 
+    };
 }

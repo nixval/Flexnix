@@ -8,7 +8,7 @@
     # ----------------------------------------------------
     vim.theme = {
       enable = true;
-      name = "catppuccin";
+      name = lib.mkForce "catppuccin";
       style = "mocha";
       transparent = true;
     };

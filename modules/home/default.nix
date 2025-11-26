@@ -22,7 +22,11 @@
     ./desktop/common-apps.nix
 
     # Development
-    ./languages  
+    ./languages
+    # ./languages/rust.nix
+    # ./languages/javascript.nix
+    # ./languages/utils.nix
+    # ./languages/python.nix
     ./development 
   ];
 }
