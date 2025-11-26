@@ -2,7 +2,7 @@
   imports = [
     ./base.nix
     ./cli/zsh.nix  
-    ./cli/tmux.nix
+    ./cli/tmux
     ./editors/nvf
     
   ];
