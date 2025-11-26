@@ -2,10 +2,10 @@
 {
   # --- Tampilan & Editor ---
   "workbench.iconTheme" = "vscode-icons";
-  "workbench.colorTheme" = "Dracula";
+  # "workbench.colorTheme" = "Dracula";
   "workbench.startupEditor" = "none";
-  "editor.fontFamily" = "'JetBrainsMonoNL Nerd Font', 'monospace'";
-  "editor.fontSize" = 14;
+  # "editor.fontFamily" = "'JetBrainsMonoNL Nerd Font', 'monospace'";
+  # "editor.fontSize" = 14;
   "editor.minimap.enabled" = false;
   "files.autoSave" = "onFocusChange";
 

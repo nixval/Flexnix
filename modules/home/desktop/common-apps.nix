@@ -12,6 +12,8 @@ in
     # 1. Native Packages (Nixpkgs)
     home.packages = with pkgs; [
       obsidian
+      # firefox
+      floorp-bin
       # vlc
       # gimp
     ];

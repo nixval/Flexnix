@@ -1,5 +1,5 @@
 # modules/editors/neovim/ui.nix
-{ ... }:
+{ lib, ... }:
 
 {
   programs.nvf.settings = {
@@ -10,7 +10,7 @@
       enable = true;
       name = lib.mkForce "catppuccin";
       style = "mocha";
-      transparent = true;
+      transparent = lib.mkForce true;
     };
 
     # ----------------------------------------------------

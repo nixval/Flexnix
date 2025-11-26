@@ -22,7 +22,9 @@ in
       
       # Packages list is intentionally empty here.
       # Other modules (like gaming.nix or office.nix) will append to this list.
-      packages = [ ]; 
+      packages = [ 
+        "org.mozilla.Thunderbird"
+      ]; 
     };
   };
 }
